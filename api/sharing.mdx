@@ -1,0 +1,126 @@
+---
+title: "Sharing API — verify passwords endpoint"
+description: "Verify share passwords for password-protected collections and media entries. Access public resources without authentication using public endpoints."
+---
+
+Movie Circle supports three levels of access control for shared content: fully public (no authentication required), email-invite (only listed email addresses), and password-protected. The Sharing API provides the server-side password verification step used when a visitor attempts to access a password-protected item.
+
+Public and password-protected collections can be accessed via `GET /api/groups/:id/public` (documented in [Collections API](/api/collections)). Public and password-protected entries can be accessed via `GET /api/media-entries/:id/public` (documented in [Media entries API](/api/media-entries)).
+
+---
+
+## Access control model
+
+The following table summarises the three sharing modes available on both collections (`Group`) and individual entries (`MediaEntry`):
+
+| Mode | `isPublic` / group membership | `invitedEmails` | `sharePassword` | Who can view |
+| --- | --- | --- | --- | --- |
+| Fully public | `isPublic: true` (collection) or member of a public group (entry) | — | — | Anyone with the URL |
+| Email-invite | — | Non-empty array | — | Only users whose email is in `invitedEmails` |
+| Password-protected | — | — | Hashed string stored in DB | Anyone who submits the correct password |
+
+<Note>
+  `isDefault` collections (`To Watch`, `Watching`, `Watched`) are also accessible via the public endpoint — they behave like `isPublic: true` for read access.
+</Note>
+
+---
+
+## Verify a share password
+
+Checks whether a supplied plain-text password matches the stored bcrypt hash for a collection or media entry. This endpoint does not require authentication.
+
+```
+POST /api/share/verify-password
+```
+
+### Request body
+
+<ParamField body="itemId" type="string" required>
+  The CUID of the collection (`Group.id`) or media entry (`MediaEntry.id`) to verify access for.
+</ParamField>
+
+<ParamField body="itemType" type="string" required>
+  The type of item: `"collection"` or `"item"`.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The plain-text password submitted by the visitor.
+</ParamField>
+
+### Example
+
+<Tabs>
+  <Tab title="Collection">
+    ```bash
+    curl -X POST https://<your-domain>/api/share/verify-password \
+      -H "Content-Type: application/json" \
+      -d '{
+        "itemId": "clx4m2r0k0000abc123xyz",
+        "itemType": "collection",
+        "password": "secret123"
+      }'
+    ```
+  </Tab>
+  <Tab title="Media entry">
+    ```bash
+    curl -X POST https://<your-domain>/api/share/verify-password \
+      -H "Content-Type: application/json" \
+      -d '{
+        "itemId": "clx4m2r0k0001def456uvw",
+        "itemType": "item",
+        "password": "letmein"
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+### Response `200`
+
+Returned when the password is correct.
+
+<ResponseField name="success" type="boolean" required>
+  Always `true` on a successful verification.
+</ResponseField>
+
+```json
+{ "success": true }
+```
+
+### Error responses
+
+| Status | Body | Reason |
+| --- | --- | --- |
+| `400` | `{ "error": "Missing required fields" }` | One or more of `itemId`, `itemType`, or `password` was absent. |
+| `400` | `{ "error": "No password protection" }` | The item exists but does not have a `sharePassword` set. |
+| `401` | `{ "error": "Invalid password" }` | The supplied password does not match the stored hash. |
+| `404` | `{ "error": "Not found" }` | No record found for the given `itemId` and `itemType`. |
+
+<Warning>
+  A `400 No password protection` response indicates the item is either fully public or email-invite only. Client code should handle this case by granting access directly rather than prompting for a password again.
+</Warning>
+
+---
+
+## Accessing public content
+
+The following endpoints are unauthenticated and return shared content directly.
+
+### Get a public collection
+
+See [Collections API — Get a public collection](/api/collections#get-a-public-collection) for full documentation.
+
+```
+GET /api/groups/:id/public
+```
+
+Returns the collection, its media entries, and TMDB titles when `isPublic` or `isDefault` is `true`. Returns `404` for private collections.
+
+### Get a public media entry
+
+See [Media entries API — Get a public media entry](/api/media-entries#get-a-public-media-entry) for full documentation.
+
+```
+GET /api/media-entries/:id/public
+```
+
+Returns the entry with TMDB metadata when the entry belongs to at least one public or default collection. Returns `404` otherwise.

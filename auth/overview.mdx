@@ -1,0 +1,64 @@
+---
+title: "Signing in to Movie Circle with email or social login"
+description: "Movie Circle supports three ways to sign in: email and password, GitHub, and Google. New accounts come with three default collections ready to use."
+---
+
+Movie Circle gives you three ways to access your account. You can register with an email address and password, or sign in instantly using your existing GitHub or Google account. All three options are available from the same sign-in page, and a new account takes less than a minute to set up.
+
+## Sign-in options
+
+<CardGroup cols={2}>
+  <Card title="Email and password" icon="envelope">
+    Register with any email address and a password you choose. Use this option if you prefer not to link a third-party account.
+  </Card>
+  <Card title="GitHub" icon="github">
+    Sign in with your GitHub account. Movie Circle uses your GitHub name, email, and profile picture.
+  </Card>
+  <Card title="Google" icon="google">
+    Sign in with your Google account. Movie Circle uses your Google name, email, and profile picture.
+  </Card>
+  <Card title="Already have an account?" icon="arrow-right-to-bracket">
+    Navigate to the sign-in page at `/auth/signin` and choose any method — you'll land on your dashboard immediately after signing in.
+  </Card>
+</CardGroup>
+
+## Create an account with email
+
+If you don't want to use GitHub or Google, you can create an account directly with an email address and password.
+
+<Steps>
+  <Step title="Go to the sign-up page">
+    Navigate to `/auth/signup`, or click **Create one** on the sign-in page.
+  </Step>
+  <Step title="Fill in your details">
+    Enter your full name, email address, and a password. Your password must be at least 8 characters long. Confirm your password in the second field.
+  </Step>
+  <Step title="Submit the form">
+    Click **Create account**. If the email address is already registered, you'll see an error — head to the sign-in page instead.
+  </Step>
+  <Step title="Sign in">
+    After your account is created, you're redirected to the sign-in page. Enter your email and password to sign in.
+  </Step>
+</Steps>
+
+<Note>
+  After you create an account with email, you sign in from `/auth/signin` using the email and password form — not the GitHub or Google buttons.
+</Note>
+
+## What happens when you first sign in
+
+When your account is created for the first time — whether via email, GitHub, or Google — Movie Circle automatically sets up three collections for you:
+
+- **To Watch** — for movies and shows you want to see
+- **Watching** — for titles you're currently in the middle of
+- **Watched** — for everything you've already seen
+
+These collections appear in your library immediately and are private by default. You can start adding movies and TV shows to them right away.
+
+## Sign out
+
+To sign out, open your account menu (your profile picture or name in the top navigation) and select **Sign out**. Your session stays active for 30 days from your last sign-in, after which you'll be asked to sign in again.
+
+<Tip>
+  On shared or public devices, always sign out manually rather than relying on the session to expire.
+</Tip>

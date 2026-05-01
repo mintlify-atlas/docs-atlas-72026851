@@ -1,0 +1,94 @@
+---
+title: "Creating and managing collections of movies and TV"
+description: "Organize movies and TV shows into named collections, set visibility, and browse entries — with three default lists created automatically on sign-up."
+---
+
+Collections are the core organizational unit in Movie Circle. Each collection is a named group that holds any number of movies and TV series you have added to your account. You can create as many collections as you need — a "Best of 2024" list, a "Watch with family" group, or a private archive of films you have already seen. Collections are listed at `/collections`, where you can open, edit, and manage them all in one place.
+
+## Default collections
+
+When you sign up for Movie Circle, three collections are created automatically and appear at the top of your Collections page under **Your Lists**:
+
+| Collection | Purpose |
+|---|---|
+| **To Watch** | Titles you plan to watch in the future |
+| **Watching** | Titles you are currently in the middle of |
+| **Watched** | Titles you have already finished |
+
+<Note>
+Default collections cannot be edited or deleted. They are permanent and always visible at the top of your Collections page.
+</Note>
+
+These three lists double as watch-status buckets. When you set the status on a media entry, Movie Circle automatically moves it to the matching default collection.
+
+## Creating a custom collection
+
+<Steps>
+  <Step title="Open Collections">
+    Go to `/collections`. You need to be signed in to see your collections.
+  </Step>
+  <Step title="Click New Collection">
+    Press the **New Collection** button in the top-right corner of the page. A dialog opens.
+  </Step>
+  <Step title="Fill in the details">
+    Enter a **Name** (required) and an optional **Description** for the collection.
+  </Step>
+  <Step title="Set visibility">
+    Toggle the **Public** switch if you want the collection to be accessible via a share link. Leave it off to keep the collection private by default.
+  </Step>
+  <Step title="Save">
+    Click **Save**. The new collection appears immediately under **Custom Collections** on the page.
+  </Step>
+</Steps>
+
+<Tip>
+You can always change the name, description, and visibility of a custom collection later using the edit action.
+</Tip>
+
+## Viewing a collection's entries
+
+Click any collection card to open it at `/collections/[id]`. The detail page shows:
+
+- The collection name, description, and item count in the header
+- A grid of all media entries in the collection, each showing the poster, title, your personal rating (if set), and any notes
+- Whether the collection is marked as public
+
+Clicking an entry in the collection opens a media detail view for that specific entry, showing the full TMDB information alongside your personal rating and notes.
+
+## Editing a custom collection
+
+On the `/collections` page, hover over any custom collection card to reveal the **Edit** (pencil) and **Delete** (trash) icon buttons. Click the edit icon to open the edit dialog, where you can update the name, description, and public/private toggle.
+
+<Warning>
+Editing is not available for the three default collections (To Watch, Watching, Watched). Attempting to click the edit icon on a default collection shows an informational message instead.
+</Warning>
+
+## Deleting a collection
+
+Hover over a custom collection card and click the **Delete** icon. A confirmation prompt appears before the collection is permanently removed. Deleting a collection does not delete the underlying media entries — they remain in your account and in any other collections they belong to.
+
+## URL structure
+
+Collections use ID-based URLs generated when the collection is created. The slug is derived from the name plus a timestamp, for example:
+
+```
+/collections/clxyz1234abcd
+```
+
+Each collection's share link follows the same structure under the share route:
+
+```
+/share/collection/clxyz1234abcd
+```
+
+<AccordionGroup>
+  <Accordion title="Why can't I edit or delete my default collections?">
+    The To Watch, Watching, and Watched collections are managed by Movie Circle to track your watch status across all entries. Because other parts of the app depend on these collections staying consistent, they are locked from editing and deletion.
+  </Accordion>
+  <Accordion title="Can I add the same title to more than one collection?">
+    Yes. A single media entry (a movie or TV show) can belong to multiple collections at the same time. See the [Media Entries](/features/media-entries) page for details on adding titles to multiple collections.
+  </Accordion>
+  <Accordion title="Does making a collection public share it immediately?">
+    Marking a collection as public makes it accessible to anyone who has the share link. Until you share the link, no one else will find it. You can also add password protection or restrict access to specific email addresses from the sharing settings dialog on the collection detail page.
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,425 @@
+---
+title: "Media entries API endpoints"
+description: "Add movies and TV series to collections, update watch status and ratings, search by TMDB ID, and manage per-entry sharing settings."
+---
+
+A media entry represents a single movie or TV series that a user has added to one or more collections. Entries are deduplicated per user by the combination of `tmdbId` and `type` — creating an entry that already exists merges collection membership rather than producing a duplicate.
+
+All endpoints require a valid NextAuth session cookie except `GET /api/media-entries/:id/public`.
+
+## Media type values
+
+The `type` field uses the `MediaType` enum:
+
+| Value | Meaning |
+| --- | --- |
+| `"movie"` | A film from TMDB's movie catalogue |
+| `"series"` | A TV series from TMDB's TV catalogue |
+
+## Watch status values
+
+The `status` field maps to default system collections:
+
+| Value | Maps to collection |
+| --- | --- |
+| `"to_watch"` | To Watch |
+| `"watching"` | Watching |
+| `"watched"` | Watched |
+
+Setting a new status removes the entry from the previous status collection and adds it to the new one.
+
+---
+
+## List media entries
+
+Returns media entries belonging to the authenticated user, optionally filtered.
+
+```
+GET /api/media-entries
+```
+
+### Query parameters
+
+<ParamField query="groupId" type="string">
+  Filter entries to those belonging to the given collection ID.
+</ParamField>
+
+<ParamField query="tmdbId" type="string">
+  Filter by TMDB numeric ID. Must be combined with `type` to take effect.
+</ParamField>
+
+<ParamField query="type" type="string">
+  Filter by media type (`movie` or `series`). Must be combined with `tmdbId` to take effect.
+</ParamField>
+
+### Example
+
+```bash
+# All entries in a specific collection
+curl "https://<your-domain>/api/media-entries?groupId=clx4m2r0k0000abc123xyz" \
+  -H "Cookie: next-auth.session-token=<token>"
+
+# Find a specific TMDB item
+curl "https://<your-domain>/api/media-entries?tmdbId=550&type=movie" \
+  -H "Cookie: next-auth.session-token=<token>"
+```
+
+### Response `200`
+
+Returns an array of media entry objects, ordered by creation date (newest first). Each object includes:
+
+<ResponseField name="id" type="string" required>
+  Unique CUID for the entry.
+</ResponseField>
+
+<ResponseField name="tmdbId" type="number" required>
+  Numeric TMDB identifier for the movie or series.
+</ResponseField>
+
+<ResponseField name="type" type="string" required>
+  `"movie"` or `"series"`.
+</ResponseField>
+
+<ResponseField name="rating" type="number">
+  User rating clamped to `0–10`. `null` if not set.
+</ResponseField>
+
+<ResponseField name="comment" type="string">
+  User comment or review. `null` if not set.
+</ResponseField>
+
+<ResponseField name="isShared" type="boolean" required>
+  Whether the entry has an active share link.
+</ResponseField>
+
+<ResponseField name="shareSlug" type="string">
+  Unique slug for the share link. `null` if not shared.
+</ResponseField>
+
+<ResponseField name="userId" type="string" required>
+  ID of the owning user.
+</ResponseField>
+
+<ResponseField name="groups" type="object[]" required>
+  Array of `MediaEntryGroup` join records for this entry.
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Join record ID.</ResponseField>
+    <ResponseField name="mediaEntryId" type="string">ID of this entry.</ResponseField>
+    <ResponseField name="groupId" type="string">ID of the collection.</ResponseField>
+    <ResponseField name="createdAt" type="string">ISO 8601 timestamp when the entry was added to the collection.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="createdAt" type="string" required>
+  ISO 8601 creation timestamp.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string" required>
+  ISO 8601 last-update timestamp.
+</ResponseField>
+
+---
+
+## Create or update a media entry
+
+Creates a new entry, or updates an existing one if the authenticated user already has an entry for the same `(tmdbId, type)` pair. This upsert behavior means calling `POST` twice with the same TMDB item merges the collection membership rather than creating a duplicate record.
+
+```
+POST /api/media-entries
+```
+
+### Request body
+
+<ParamField body="tmdbId" type="number" required>
+  TMDB numeric ID of the movie or series.
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  `"movie"` or `"series"`.
+</ParamField>
+
+<ParamField body="status" type="string">
+  Watch status: `"to_watch"`, `"watching"`, or `"watched"`. When provided, the entry is moved out of the previous status collection and into the corresponding default collection.
+</ParamField>
+
+<ParamField body="groupIds" type="string[]">
+  Array of collection IDs to add the entry to. On create, these become the initial memberships. On update, only new memberships are appended (existing ones are not removed).
+</ParamField>
+
+<ParamField body="rating" type="number">
+  Rating from `0` to `10`. Values outside this range are clamped automatically. Pass `null` to clear.
+</ParamField>
+
+<ParamField body="comment" type="string">
+  User comment or review text. Pass `null` to clear.
+</ParamField>
+
+### Example
+
+```bash
+curl -X POST https://<your-domain>/api/media-entries \
+  -H "Cookie: next-auth.session-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tmdbId": 550,
+    "type": "movie",
+    "status": "watched",
+    "rating": 9,
+    "comment": "Incredible film."
+  }'
+```
+
+### Response `201`
+
+Returns the created or updated entry object with all fields described in [List media entries](#list-media-entries).
+
+<Note>
+  Rating values are clamped server-side via `Math.min(Math.max(rating, 0), 10)`. There is no validation error for out-of-range values — they are silently clamped.
+</Note>
+
+---
+
+## Get a media entry
+
+Returns a single media entry by its ID.
+
+```
+GET /api/media-entries/:id
+```
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The CUID of the media entry.
+</ParamField>
+
+### Example
+
+```bash
+curl https://<your-domain>/api/media-entries/clx4m2r0k0001def456uvw \
+  -H "Cookie: next-auth.session-token=<token>"
+```
+
+### Response `200`
+
+Returns the entry object. Note that this endpoint does not include the `groups` relation — use `GET /api/media-entries` with a `groupId` filter or the search endpoint to get group membership.
+
+---
+
+## Update a media entry
+
+Updates the rating, comment, watch status, or collection membership of an existing entry.
+
+```
+PUT /api/media-entries/:id
+```
+
+<Warning>
+  The source code implements `PUT`, not `PATCH`. Send the full HTTP `PUT` verb.
+</Warning>
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The CUID of the entry to update.
+</ParamField>
+
+### Request body
+
+<ParamField body="rating" type="number">
+  New rating from `0` to `10`, clamped automatically. Pass `null` to clear.
+</ParamField>
+
+<ParamField body="comment" type="string">
+  New comment text. Pass `null` to clear.
+</ParamField>
+
+<ParamField body="status" type="string">
+  New watch status: `"to_watch"`, `"watching"`, or `"watched"`. Replaces the current status collection membership.
+</ParamField>
+
+<ParamField body="groupIds" type="string[]">
+  Collection IDs to add the entry to. Only new memberships are created; existing ones are unaffected.
+</ParamField>
+
+<ParamField body="removeGroupIds" type="string[]">
+  Collection IDs to remove the entry from.
+</ParamField>
+
+### Example
+
+```bash
+curl -X PUT https://<your-domain>/api/media-entries/clx4m2r0k0001def456uvw \
+  -H "Cookie: next-auth.session-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{"rating": 8, "status": "watched", "removeGroupIds": ["clx4m2r0k0000abc123xyz"]}'
+```
+
+### Response `200`
+
+Returns the updated entry object including the `groups` array.
+
+---
+
+## Delete a media entry
+
+Permanently removes a media entry and all its collection memberships.
+
+```
+DELETE /api/media-entries/:id
+```
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The CUID of the entry to delete.
+</ParamField>
+
+### Example
+
+```bash
+curl -X DELETE https://<your-domain>/api/media-entries/clx4m2r0k0001def456uvw \
+  -H "Cookie: next-auth.session-token=<token>"
+```
+
+### Response `200`
+
+```json
+{ "success": true }
+```
+
+---
+
+## Search media entries by TMDB ID
+
+Looks up whether the authenticated user has an entry for a specific TMDB item and returns full collection context alongside it.
+
+```
+GET /api/media-entries/search
+```
+
+### Query parameters
+
+<ParamField query="tmdbId" type="string" required>
+  TMDB numeric ID (as a string query param).
+</ParamField>
+
+<ParamField query="type" type="string" required>
+  `"movie"` or `"series"`.
+</ParamField>
+
+### Example
+
+```bash
+curl "https://<your-domain>/api/media-entries/search?tmdbId=550&type=movie" \
+  -H "Cookie: next-auth.session-token=<token>"
+```
+
+### Response `200`
+
+<ResponseField name="exists" type="boolean" required>
+  `true` if the user already has an entry for this TMDB item.
+</ResponseField>
+
+<ResponseField name="entry" type="object">
+  The matching media entry with `groups` relation expanded (including nested `group` objects), or `null`.
+</ResponseField>
+
+<ResponseField name="currentStatus" type="string">
+  Derived watch status: `"to_watch"`, `"watching"`, `"watched"`, or `null` if the entry exists but is not in any status collection.
+</ResponseField>
+
+<ResponseField name="groups" type="object[]" required>
+  Collections the entry currently belongs to. Each item has `id`, `name`, and `isDefault`. Empty array if the entry does not exist.
+</ResponseField>
+
+<ResponseField name="defaultGroups" type="object[]" required>
+  All default collections for this user (`To Watch`, `Watching`, `Watched`). Each item has `id`, `name`, `isDefault`.
+</ResponseField>
+
+<ResponseField name="customGroups" type="object[]" required>
+  All custom (non-default) collections for this user. Each item has `id`, `name`, `isDefault`.
+</ResponseField>
+
+<ResponseField name="allGroups" type="object[]" required>
+  All collections for this user, default first then alphabetical. Each item has `id`, `name`, `isDefault`.
+</ResponseField>
+
+---
+
+## Get a public media entry
+
+Returns a media entry without authentication. Only succeeds when the entry belongs to at least one public or default collection.
+
+```
+GET /api/media-entries/:id/public
+```
+
+<Note>
+  This endpoint does not require a session cookie.
+</Note>
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The CUID of the media entry.
+</ParamField>
+
+### Example
+
+```bash
+curl https://<your-domain>/api/media-entries/clx4m2r0k0001def456uvw/public
+```
+
+### Response `200`
+
+Returns the full entry object, including nested `user` (id, name, email) and `groups` (with nested `group`), plus TMDB-sourced fields when available:
+
+<ResponseField name="title" type="string">
+  TMDB display title, populated from the server-side TMDB cache. May be absent if the cache fetch fails.
+</ResponseField>
+
+<ResponseField name="poster_path" type="string">
+  TMDB poster path string. May be absent if the cache fetch fails.
+</ResponseField>
+
+Returns `404` if the entry does not exist or has no public/default collection membership.
+
+---
+
+## Update media entry sharing settings
+
+Updates the email invite list and/or password protection for a specific media entry.
+
+```
+PUT /api/media-entries/:id/share
+```
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The CUID of the media entry.
+</ParamField>
+
+### Request body
+
+<ParamField body="invitedEmails" type="string[]">
+  Replaces the full list of invited email addresses. Pass an empty array `[]` to remove all invites.
+</ParamField>
+
+<ParamField body="password" type="string">
+  Plain-text password to hash and store. Pass `null` to remove password protection. Omit to leave unchanged.
+</ParamField>
+
+### Example
+
+```bash
+curl -X PUT https://<your-domain>/api/media-entries/clx4m2r0k0001def456uvw/share \
+  -H "Cookie: next-auth.session-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{"invitedEmails": ["friend@example.com"], "password": "letmein"}'
+```
+
+### Response `200`
+
+Returns the updated media entry object. `sharePassword` is stored as a hash and is never returned in plain text.

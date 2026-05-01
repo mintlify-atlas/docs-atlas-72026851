@@ -1,0 +1,316 @@
+---
+title: "Collections API — groups endpoints"
+description: "Create, read, update, and delete collections (groups) of movies and TV shows. Manage sharing settings and access public collections."
+---
+
+Collections — called "groups" in the API and database — are named lists that hold media entries. Every user starts with three default collections (`To Watch`, `Watching`, `Watched`) which cannot be deleted. Custom collections can be public or private and may carry email-invite or password-based share protection.
+
+All endpoints below require a valid NextAuth session cookie except `GET /api/groups/:id/public`.
+
+---
+
+## List collections
+
+Returns all collections belonging to the authenticated user, ordered by creation date (newest first).
+
+```
+GET /api/groups
+```
+
+### Example
+
+```bash
+curl https://<your-domain>/api/groups \
+  -H "Cookie: next-auth.session-token=<token>"
+```
+
+### Response `200`
+
+Returns an array of group objects.
+
+<ResponseField name="id" type="string" required>
+  Unique CUID for the collection.
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Display name of the collection.
+</ResponseField>
+
+<ResponseField name="slug" type="string" required>
+  URL-safe unique identifier derived from `name` at creation time.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Optional description. `null` if not set.
+</ResponseField>
+
+<ResponseField name="isPublic" type="boolean" required>
+  Whether the collection is publicly accessible without authentication.
+</ResponseField>
+
+<ResponseField name="isDefault" type="boolean" required>
+  `true` for the three system-created status collections (`To Watch`, `Watching`, `Watched`).
+</ResponseField>
+
+<ResponseField name="userId" type="string" required>
+  ID of the owning user.
+</ResponseField>
+
+<ResponseField name="invitedEmails" type="string[]" required>
+  Email addresses that have been granted access to a private collection.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string" required>
+  ISO 8601 creation timestamp.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string" required>
+  ISO 8601 last-update timestamp.
+</ResponseField>
+
+<ResponseField name="_count" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="mediaEntries" type="number" required>
+      Total number of media entries in this collection.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Create a collection
+
+Creates a new custom collection for the authenticated user.
+
+```
+POST /api/groups
+```
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  Display name for the collection. Must be a non-empty string.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Optional description. Pass `null` or omit to leave blank.
+</ParamField>
+
+<ParamField body="isPublic" type="boolean" default="false">
+  Set to `true` to make the collection accessible without authentication via `GET /api/groups/:id/public`.
+</ParamField>
+
+### Example
+
+```bash
+curl -X POST https://<your-domain>/api/groups \
+  -H "Cookie: next-auth.session-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Horror favorites", "description": "The scariest picks", "isPublic": false}'
+```
+
+### Response `201`
+
+Returns the newly created group object with all fields listed in [List collections](#list-collections), plus `_count.mediaEntries` (always `0` on creation).
+
+<Note>
+  The `slug` is auto-generated as `<name-lowercased-hyphenated>-<timestamp>` and cannot be set manually.
+</Note>
+
+---
+
+## Get a collection
+
+Returns a single collection with its full list of media entries and TMDB-derived titles.
+
+```
+GET /api/groups/:id
+```
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The CUID of the collection.
+</ParamField>
+
+### Example
+
+```bash
+curl https://<your-domain>/api/groups/clx4m2r0k0000abc123xyz \
+  -H "Cookie: next-auth.session-token=<token>"
+```
+
+### Response `200`
+
+Returns the group object plus two additional fields:
+
+<ResponseField name="mediaEntries" type="object[]" required>
+  Array of join-table records. Each item includes a nested `mediaEntry` with all fields from the [Media entries API](/api/media-entries).
+</ResponseField>
+
+<ResponseField name="titles" type="object" required>
+  Map of `tmdbId` to TMDB-sourced display title, fetched from the server-side cache.
+</ResponseField>
+
+---
+
+## Update a collection
+
+Updates the name, description, or visibility of a collection the authenticated user owns.
+
+```
+PUT /api/groups/:id
+```
+
+<Warning>
+  The source code implements `PUT`, not `PATCH`. Send the full HTTP `PUT` verb.
+</Warning>
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The CUID of the collection to update.
+</ParamField>
+
+### Request body
+
+<ParamField body="name" type="string">
+  New display name. Omit to keep the existing name.
+</ParamField>
+
+<ParamField body="description" type="string">
+  New description. Pass `null` explicitly to clear it.
+</ParamField>
+
+<ParamField body="isPublic" type="boolean">
+  New visibility. Omit to keep the existing setting.
+</ParamField>
+
+### Example
+
+```bash
+curl -X PUT https://<your-domain>/api/groups/clx4m2r0k0000abc123xyz \
+  -H "Cookie: next-auth.session-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Updated name", "isPublic": true}'
+```
+
+### Response `200`
+
+Returns the updated group object with all standard fields and `_count.mediaEntries`.
+
+---
+
+## Delete a collection
+
+Permanently deletes a collection and all its `MediaEntryGroup` join records. The underlying `MediaEntry` records are not deleted — only the membership links.
+
+```
+DELETE /api/groups/:id
+```
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The CUID of the collection to delete.
+</ParamField>
+
+### Example
+
+```bash
+curl -X DELETE https://<your-domain>/api/groups/clx4m2r0k0000abc123xyz \
+  -H "Cookie: next-auth.session-token=<token>"
+```
+
+### Response `200`
+
+```json
+{ "success": true }
+```
+
+---
+
+## Get a public collection
+
+Returns a collection without requiring authentication. Only succeeds when `isPublic` is `true` or `isDefault` is `true`.
+
+```
+GET /api/groups/:id/public
+```
+
+<Note>
+  This endpoint does not require a session cookie.
+</Note>
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The CUID of the collection.
+</ParamField>
+
+### Example
+
+```bash
+curl https://<your-domain>/api/groups/clx4m2r0k0000abc123xyz/public
+```
+
+### Response `200`
+
+Returns the full group object including:
+
+<ResponseField name="user" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="id" type="string">Owner's user ID.</ResponseField>
+    <ResponseField name="name" type="string">Owner's display name.</ResponseField>
+    <ResponseField name="email" type="string">Owner's email address.</ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="mediaEntries" type="object[]" required>
+  Full list of join records, each with a nested `mediaEntry`.
+</ResponseField>
+
+<ResponseField name="titles" type="object" required>
+  Map of `tmdbId` to TMDB-sourced display title.
+</ResponseField>
+
+Returns `404` if the collection does not exist or is neither public nor a default collection.
+
+---
+
+## Update collection sharing settings
+
+Updates the email invite list and/or password protection for a collection.
+
+```
+PUT /api/groups/:id/share
+```
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The CUID of the collection.
+</ParamField>
+
+### Request body
+
+<ParamField body="invitedEmails" type="string[]">
+  Replaces the full list of invited email addresses. Pass an empty array `[]` to remove all invites.
+</ParamField>
+
+<ParamField body="password" type="string">
+  Plain-text password to hash and store. Pass `null` to remove password protection. Omit to leave unchanged.
+</ParamField>
+
+### Example
+
+```bash
+curl -X PUT https://<your-domain>/api/groups/clx4m2r0k0000abc123xyz/share \
+  -H "Cookie: next-auth.session-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{"invitedEmails": ["friend@example.com"], "password": "secret123"}'
+```
+
+### Response `200`
+
+Returns the updated group object. `sharePassword` is stored as a bcrypt hash and is never returned in plain text.

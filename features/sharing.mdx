@@ -1,0 +1,119 @@
+---
+title: "Sharing your collections and media entries with others"
+description: "Generate shareable links for collections and individual entries, protect them with a password or email invite list, and control who can view your content."
+---
+
+Movie Circle lets you share both entire collections and individual media entries with anyone — or with a specific set of people. Every shareable item gets a unique public URL under the `/share/` route. You control access through three modes: fully public (anyone with the link), password-protected, or invitation-only (restricted to specific email addresses). You can change or revoke these settings at any time from the sharing settings dialog.
+
+## Sharing a collection
+
+<Steps>
+  <Step title="Open the collection">
+    Go to `/collections/[id]` for the collection you want to share.
+  </Step>
+  <Step title="Open sharing settings">
+    Click the **Share** button in the collection header. The sharing settings dialog opens.
+  </Step>
+  <Step title="Copy the share link">
+    The dialog shows the share link in a read-only field. Click the **Copy** icon to copy it to your clipboard.
+  </Step>
+  <Step title="Set visibility">
+    Choose **Public** (anyone with the link can view) or **Private** (restricted access). Public is selected by default.
+  </Step>
+  <Step title="Save">
+    Click **Save Settings** to apply your changes. The link is now active.
+  </Step>
+</Steps>
+
+The share link for a collection follows this pattern:
+
+```
+https://your-domain.com/share/collection/[collection-id]
+```
+
+## Sharing an individual media entry
+
+You can also share a single entry — one movie or TV show from a collection — as a standalone page.
+
+<Steps>
+  <Step title="Open the collection containing the entry">
+    Navigate to `/collections/[id]`.
+  </Step>
+  <Step title="Open the entry's share settings">
+    Hover over the entry card and click the **Share** icon, or open the entry's edit dialog and click **Share** from there.
+  </Step>
+  <Step title="Copy the link and configure access">
+    The sharing dialog works the same way as for collections. Copy the link and choose public, password, or invitation-only access.
+  </Step>
+</Steps>
+
+Shared item links follow this pattern:
+
+```
+https://your-domain.com/share/item/[entry-id]
+```
+
+A shared item page displays the movie or TV show's TMDB information (title, poster, overview, genres, release date) together with the owner's personal rating and notes.
+
+## Access control modes
+
+<CardGroup cols={2}>
+  <Card title="Public" icon="globe">
+    Anyone who has the link can view the shared content without signing in. No password or account is required.
+  </Card>
+  <Card title="Password-protected" icon="lock">
+    Visitors must enter the correct password before they can view the content. The password is set by you in the sharing settings dialog.
+  </Card>
+  <Card title="Invitation only" icon="mail">
+    Access is restricted to a list of email addresses you specify. Visitors must be signed in to Movie Circle with a matching email address.
+  </Card>
+  <Card title="Private (no link active)" icon="eye-off">
+    If you have not enabled sharing, the collection or entry is not accessible to anyone except you.
+  </Card>
+</CardGroup>
+
+## Password protection
+
+When you select **Private → Password Only**, you set a password in the sharing settings dialog. Anyone who visits the share link — whether or not they have a Movie Circle account — sees a password prompt and must enter the correct password to proceed.
+
+<Warning>
+There is currently no way to recover a forgotten share password from the recipient's side. If you lose the password, you can overwrite it by opening the sharing settings dialog and setting a new one.
+</Warning>
+
+## Invitation-only access
+
+When you select **Private → Invitation Only**, you add one or more email addresses to the invited list. Recipients must:
+
+1. Have a Movie Circle account registered with that exact email address.
+2. Be signed in when they visit the share link.
+
+If a signed-in user's email is not on the invited list, they see an **Access Denied** message. If they are not signed in at all, they are prompted to sign in first.
+
+<Note>
+The collection or item owner always has access to their own shared content regardless of the invited email list.
+</Note>
+
+## How recipients access shared content
+
+When a recipient opens a share link, Movie Circle checks access in the following order:
+
+1. **No restrictions set** → content is shown immediately.
+2. **Invitation-only** → the user must sign in; their email is checked against the invited list.
+3. **Password-protected** → the user enters the password; a successful match grants access for the current browser session.
+
+Shared collections at `/share/collection/[id]` display the owner's name, the collection name and description, and all media entries with their titles, posters, ratings, and notes. Each entry in a shared collection links to a media detail page at `/share/collection/[id]/media/[type]/[tmdbId]`, so recipients can explore individual titles in context.
+
+<AccordionGroup>
+  <Accordion title="Can I use both a password and an email invite list at the same time?">
+    No. The sharing settings dialog treats password protection and invitation-only as mutually exclusive options. Choose one access method per item.
+  </Accordion>
+  <Accordion title="Does sharing a collection make it editable for recipients?">
+    No. Shared links are always read-only. Recipients can view the collection and its entries but cannot add, edit, or remove anything.
+  </Accordion>
+  <Accordion title="Can I revoke a share link?">
+    You can switch a collection or entry back to **Public** with no restrictions, or change the password or invited list at any time from the sharing settings dialog. Changing to a stricter access mode takes effect immediately for anyone who tries to load the link again.
+  </Accordion>
+  <Accordion title="Do recipients need a Movie Circle account for public links?">
+    No. Public share links work for anyone, including users who do not have a Movie Circle account. Only invitation-only links require recipients to sign in.
+  </Accordion>
+</AccordionGroup>

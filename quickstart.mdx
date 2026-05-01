@@ -1,81 +1,99 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
-icon: 'rocket'
+title: "Get started with Movie Circle in under ten minutes"
+description: "Clone the repo, configure your environment, run database migrations, and have Movie Circle running locally with a seeded database in under ten minutes."
 ---
 
-## Get started in three steps
+This guide walks you through getting Movie Circle running on your machine. You'll clone the repository, configure environment variables, apply database migrations, and start the development server. If you prefer containers, there's also a Docker Compose path that handles the database for you.
 
-Get your documentation site running locally and make your first customization.
+## Prerequisites
 
-### Step 1: Set up your local environment
+Before you start, make sure you have the following installed:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+- **Node.js** v18 or later
+- **pnpm** — install with `npm install -g pnpm`
+- **PostgreSQL** 14 or later (if running manually), or **Docker** and **Docker Compose** (if using the container path)
+- A **TMDB API key** — register at [themoviedb.org](https://www.themoviedb.org/settings/api) and create a free API key
 
-### Step 2: Deploy your changes
+<Steps>
+  <Step title="Clone the repository">
+    Clone the Movie Circle repository and move into the project directory:
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    ```bash
+    git clone https://github.com/adrian-237/movie-circle.git
+    cd movie-circle
+    ```
+  </Step>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Step title="Install dependencies">
+    Install all Node.js dependencies using pnpm:
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    ```bash
+    pnpm install
+    ```
+  </Step>
 
-### Step 3: Go live
+  <Step title="Configure environment variables">
+    Create a `.env` file in the project root and populate it with your configuration. See the [environment variables reference](/environment-variables) for a full description of each variable and where to get the required credentials.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    At minimum, you need `DATABASE_URL`, `NEXT_PUBLIC_TMDB_API_KEY`, `TMDB_API_KEY`, `NEXTAUTH_URL`, and `NEXTAUTH_SECRET` before the app will start.
 
-## Next steps
+    <Tip>
+      Generate a strong `NEXTAUTH_SECRET` by running `openssl rand -base64 32` in your terminal.
+    </Tip>
+  </Step>
 
-Now that you have your docs running, explore these key features:
+  <Step title="Set up the database">
+    Choose the path that matches your setup: run PostgreSQL locally, or spin it up with Docker Compose.
 
-<CardGroup cols={2}>
+    <CodeGroup>
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+    ```bash Manual (local PostgreSQL)
+    # Apply migrations and create the schema
+    pnpm migrate:dev
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+    # Seed the database with sample data
+    pnpm db:seed
+    ```
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+    ```bash Docker Compose
+    # Start a PostgreSQL container in the background
+    docker-compose up -d
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+    # Apply migrations once the container is healthy
+    pnpm migrate:dev
 
-</CardGroup>
+    # Seed the database
+    pnpm db:seed
+    ```
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+    </CodeGroup>
+
+    <Note>
+      The `docker-compose.yml` starts only the PostgreSQL service — it does not run the Next.js app. The app runs on your host via `pnpm dev`. Set `DATABASE_URL` to `postgresql://postgres:postgres@localhost:5432/movie_circle` to match the container's default credentials.
+    </Note>
+  </Step>
+
+  <Step title="Start the development server">
+    Start Movie Circle in development mode:
+
+    ```bash
+    pnpm dev
+    ```
+
+    Open [http://localhost:3000](http://localhost:3000) in your browser. You should see the Movie Circle landing page.
+  </Step>
+</Steps>
+
+## Create your first collection
+
+Once the app is running and you've signed up:
+
+1. Click **Sign up** and create an account with an email and password (or use GitHub/Google OAuth if you've configured those providers).
+2. After sign-in, three default collections — **To Watch**, **Watching**, and **Watched** — are created automatically on your account.
+3. Navigate to **Discover** to browse trending movies and TV shows.
+4. Open any title, click **Add to collection**, and choose or create a collection. You can optionally add a personal rating and notes.
+5. Go to **Collections** to view your lists and share them via a public link.
+
+<Tip>
+  You can create additional collections from the Collections page — for example, a "Favorites" list or a themed watch party collection.
+</Tip>

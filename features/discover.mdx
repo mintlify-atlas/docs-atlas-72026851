@@ -1,0 +1,85 @@
+---
+title: "Browsing popular movies and TV shows with Discover"
+description: "Explore popular and trending titles from TMDB, navigate between movies and TV, and open rich detail pages with cast, trailers, reviews, and more."
+---
+
+The Discover page is your starting point for finding new movies and TV shows to add to your collections. It surfaces titles sorted by popularity from The Movie Database (TMDB), updating regularly so you always see what's trending. Every card links to a full detail page where you can read the overview, watch the trailer, and add the title to a collection — all without leaving Movie Circle.
+
+## Browsing popular titles
+
+When you open `/discover`, the page loads a paginated grid of popular movies by default. Each card shows the poster image, title, and TMDB rating. Use the pagination controls at the bottom of the page to move between pages of results.
+
+<Tip>
+Switching tabs resets the page back to 1, so you always start at the top of the new content type.
+</Tip>
+
+## Switching between movies and TV shows
+
+A tab switcher in the top-right of the Discover page lets you toggle between **Movies** and **TV Shows**. Selecting a tab immediately reloads the grid with the corresponding content type — movies return films, TV returns series.
+
+<Steps>
+  <Step title="Open Discover">
+    Navigate to `/discover` from the main navigation.
+  </Step>
+  <Step title="Choose a content type">
+    Click the **Movies** or **TV Shows** tab to filter the grid.
+  </Step>
+  <Step title="Page through results">
+    Use the **Previous** and **Next** pagination controls at the bottom to browse more titles.
+  </Step>
+  <Step title="Open a title">
+    Click any card to open its detail page.
+  </Step>
+</Steps>
+
+## Movie detail pages
+
+Opening a movie from the Discover grid takes you to `/movie/[id]`. The page is split into several sections:
+
+<CardGroup cols={2}>
+  <Card title="Header" icon="image">
+    Full-screen backdrop with the poster, title, tagline, genre tags, TMDB rating, release date, and a **Watch Trailer** button that opens the official YouTube trailer in a new tab.
+  </Card>
+  <Card title="Stats" icon="chart-bar">
+    A summary bar showing budget, revenue, production status, and runtime for the film.
+  </Card>
+  <Card title="Cast" icon="users">
+    Headshots and character names for the main cast members pulled from the TMDB credits endpoint.
+  </Card>
+  <Card title="Videos" icon="play">
+    Embedded trailers and clips from YouTube, sourced from the TMDB videos list for the movie.
+  </Card>
+  <Card title="Keywords" icon="tag">
+    TMDB-curated keywords that describe the movie's themes, setting, and style.
+  </Card>
+  <Card title="Reviews" icon="message-square">
+    Critic and community reviews from TMDB, with author name, rating, and full review text.
+  </Card>
+  <Card title="Similar titles" icon="grid">
+    A row of related movies recommended by TMDB, each linking to their own detail page.
+  </Card>
+  <Card title="Watch providers" icon="monitor">
+    Streaming, rental, and purchase options for your region, sourced from TMDB JustWatch data.
+  </Card>
+</CardGroup>
+
+## TV show detail pages
+
+TV detail pages at `/tv/[id]` follow the same layout with a few differences specific to series:
+
+<Tabs>
+  <Tab title="Shared sections">
+    Both movies and TV detail pages include a full-screen header, cast credits, embedded videos, community reviews, and similar titles.
+  </Tab>
+  <Tab title="TV-only sections">
+    TV pages include a **Season 1 episode list** showing each episode's title, air date, and overview — pulled from the TMDB season endpoint. Movies have a stats bar (budget, revenue, runtime) that does not appear on TV pages.
+  </Tab>
+</Tabs>
+
+## Search
+
+From any media detail page or collection view, you can search for titles to add to a collection using the built-in search dialog. The search covers both movies and TV shows and returns results from TMDB in real time as you type.
+
+<Note>
+The Discover page shows popular and trending content and does not include a standalone search bar. To find a specific title by name, use the **Add to Collection** dialog from inside any collection.
+</Note>

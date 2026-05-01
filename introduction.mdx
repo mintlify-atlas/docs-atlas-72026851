@@ -1,0 +1,42 @@
+---
+title: "Movie Circle: social collections for movies and TV"
+description: "Movie Circle is a social media-style app for discovering movies and TV shows, building personal collections, and sharing curated lists with friends."
+---
+
+Movie Circle lets you discover trending and popular movies and TV shows, organize them into named collections, annotate each entry with a personal rating and notes, and share your lists with others via a simple link. Built on Next.js and powered by The Movie Database (TMDB), it combines a full browsing experience with a lightweight social layer.
+
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Run Movie Circle locally in minutes and create your first collection.
+  </Card>
+  <Card title="Core features" icon="film" href="/features/collections">
+    Explore collections, media entries, discovery, and sharing.
+  </Card>
+  <Card title="API reference" icon="code" href="/api/overview">
+    Integrate with Movie Circle's REST API for collections and media entries.
+  </Card>
+  <Card title="Deployment" icon="server" href="/deployment/docker">
+    Deploy with Docker Compose or to a production environment.
+  </Card>
+</CardGroup>
+
+## What you can do
+
+Movie Circle is organized around three core ideas:
+
+- **Discover** — Browse popular and trending movies and TV shows sourced from TMDB, with full detail pages showing cast, reviews, keywords, trailers, and related content.
+- **Collect** — Create named collections (like "Watchlist" or "Favorites") and add any movie or TV show to them with a personal rating and notes. Every new account gets three default collections — **To Watch**, **Watching**, and **Watched** — to track your viewing status automatically.
+- **Share** — Share any collection or individual media entry via a public link. Add password protection or restrict access to specific email addresses.
+
+## Tech overview
+
+Movie Circle is a single Next.js application using the App Router. The backend is PostgreSQL via Prisma ORM. Authentication is handled by NextAuth v5 with support for email/password, GitHub, and Google sign-in. TMDB provides all movie and TV metadata.
+
+<CardGroup cols={2}>
+  <Card title="Environment variables" icon="key" href="/environment-variables">
+    Configure your TMDB API keys, database URL, and auth secrets.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/auth/overview">
+    Sign in with email, GitHub, or Google.
+  </Card>
+</CardGroup>

@@ -1,0 +1,71 @@
+---
+title: "Sign in to Movie Circle using your GitHub or Google account"
+description: "Use your existing GitHub or Google account to sign in to Movie Circle without a separate password. Movie Circle uses your name, email, and profile picture."
+---
+
+Movie Circle lets you sign in with GitHub or Google so you don't need to create and remember a separate password. When you use one of these options, Movie Circle reads your name, email address, and profile picture from your GitHub or Google account to set up your profile.
+
+## Signing in with GitHub
+
+<Steps>
+  <Step title="Go to the sign-in page">
+    Navigate to `/auth/signin`.
+  </Step>
+  <Step title="Click the GitHub button">
+    Click **Continue with GitHub**. You'll be redirected to GitHub's authorization page.
+  </Step>
+  <Step title="Authorize Movie Circle">
+    Review the permissions and click **Authorize**. GitHub shares your name, email address, and profile picture with Movie Circle.
+  </Step>
+  <Step title="You're signed in">
+    You're redirected back to Movie Circle and signed in. If this is your first time, your account is created automatically and your three default collections — **To Watch**, **Watching**, and **Watched** — are ready to use.
+  </Step>
+</Steps>
+
+## Signing in with Google
+
+<Steps>
+  <Step title="Go to the sign-in page">
+    Navigate to `/auth/signin`.
+  </Step>
+  <Step title="Click the Google button">
+    Click **Continue with Google**. You'll be redirected to Google's sign-in flow.
+  </Step>
+  <Step title="Choose your Google account">
+    Select the Google account you want to use. If prompted, grant Movie Circle access to your name, email address, and profile picture.
+  </Step>
+  <Step title="You're signed in">
+    You're redirected back to Movie Circle and signed in. If this is your first time, your account is created automatically and your three default collections are ready to use.
+  </Step>
+</Steps>
+
+## What data Movie Circle uses
+
+When you sign in with GitHub or Google, Movie Circle reads:
+
+- **Name** — used as your display name on your profile and collections
+- **Email address** — used to identify your account
+- **Profile picture** — used as your avatar across the app
+
+Movie Circle does not read your repositories, contacts, files, or any other account data.
+
+## Linking your account
+
+Your Movie Circle account is linked to whichever provider you first used to sign in. If you signed up with Google, you sign in with Google each time. If you signed up with GitHub, you sign in with GitHub each time.
+
+<Note>
+  If you have an email-and-password account and also want to sign in with GitHub or Google, the two accounts are separate — they don't merge automatically. Use the same method you originally signed up with.
+</Note>
+
+## If sign-in fails
+
+If the GitHub or Google sign-in flow doesn't complete successfully, try the following:
+
+- **Check your browser** — make sure pop-ups are not blocked and third-party cookies are enabled.
+- **Try a different browser or private window** — cached auth state can sometimes cause issues.
+- **Verify your GitHub or Google account is active** — if your account has restrictions or requires two-factor authentication, complete that step on GitHub or Google first and then return to Movie Circle.
+- **Check the error page** — if Movie Circle redirects you to `/auth/error`, note the message shown and try again.
+
+<Warning>
+  If sign-in repeatedly fails with no clear error, contact support and include which provider you're using and any error message shown.
+</Warning>

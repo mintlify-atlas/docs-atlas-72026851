@@ -1,0 +1,97 @@
+{
+  "projectType": "saas",
+  "projectName": "Movie Circle",
+  "projectDescription": "A social media-style web app for discovering movies and TV shows, building personal collections, and sharing curated lists with friends.",
+  "theme": "almond",
+  "primaryColor": "#E84057",
+  "lightColor": "#FFF1F3",
+  "darkColor": "#1A0A0C",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "environment-variables"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/discover",
+              "features/collections",
+              "features/media-entries",
+              "features/sharing"
+            ]
+          },
+          {
+            "group": "Authentication",
+            "pages": [
+              "auth/overview",
+              "auth/oauth-providers"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/docker",
+              "deployment/database",
+              "deployment/production"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/collections",
+              "api/media-entries",
+              "api/sharing",
+              "api/user"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Discover and browse popular/trending movies and TV shows via TMDB integration",
+    "Create and manage multiple named collections (e.g., Watchlist, Favorites)",
+    "Add media entries with personal ratings and notes",
+    "Share collections and individual entries via password-protected or invite-only links",
+    "Authentication via email/password, GitHub OAuth, and Google OAuth",
+    "Default status collections: To Watch, Watching, Watched",
+    "Dark/light theme support",
+    "Docker Compose setup for local development with PostgreSQL"
+  ],
+  "publicApiSurface": [
+    "GET /api/groups — list user's collections",
+    "POST /api/groups — create a new collection",
+    "GET /api/groups/[id] — get a specific collection",
+    "PATCH /api/groups/[id] — update a collection",
+    "DELETE /api/groups/[id] — delete a collection",
+    "GET /api/groups/[id]/public — get a shared collection",
+    "GET /api/media-entries — list media entries",
+    "POST /api/media-entries — create or update a media entry",
+    "GET /api/media-entries/[id] — get a specific media entry",
+    "PATCH /api/media-entries/[id] — update a media entry",
+    "DELETE /api/media-entries/[id] — delete a media entry",
+    "POST /api/share/verify-password — verify a share password",
+    "GET /api/user/profile — get user profile",
+    "POST /api/user/change-password — change user password",
+    "GET /api/tmdb/* — TMDB proxy endpoints"
+  ]
+}

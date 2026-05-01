@@ -1,0 +1,104 @@
+---
+title: "Run Movie Circle with Docker Compose"
+description: "Use Docker Compose to spin up a local PostgreSQL database for Movie Circle development without installing Postgres directly on your machine."
+---
+
+The `docker-compose.yml` at the root of the repository defines a single service: a PostgreSQL 16 database that Movie Circle connects to via `DATABASE_URL`. Running it is the fastest way to get a working database for local development without configuring Postgres yourself.
+
+## Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) installed and running
+- [Docker Compose](https://docs.docker.com/compose/install/) v2 or later (included with Docker Desktop)
+
+## What the compose file sets up
+
+The `docker-compose.yml` configures one service and one named volume:
+
+```yaml docker-compose.yml
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: movie-circle-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: movie_circle
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+```
+
+| Setting            | Value              |
+| ------------------ | ------------------ |
+| Image              | `postgres:16-alpine` |
+| Container name     | `movie-circle-db`  |
+| Username           | `postgres`         |
+| Password           | `postgres`         |
+| Database           | `movie_circle`     |
+| Host port          | `5432`             |
+| Persistent volume  | `postgres_data`    |
+
+The health check runs `pg_isready -U postgres` every 10 seconds (5-second timeout, up to 5 retries) so dependent tooling can wait until Postgres is ready before connecting.
+
+## Starting the database
+
+<Steps>
+  <Step title="Start the container">
+    From the project root, run:
+
+    ```bash
+    docker-compose up -d
+    ```
+
+    Docker pulls `postgres:16-alpine` on the first run and creates the `postgres_data` volume. Subsequent starts reuse the cached image and existing volume data. The `-d` flag runs the container in the background so your terminal stays free.
+  </Step>
+  <Step title="Set DATABASE_URL">
+    Add the following to your `.env` file so the app can connect:
+
+    ```bash .env
+    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/movie_circle"
+    ```
+  </Step>
+  <Step title="Run migrations">
+    With the container running, apply the Prisma migrations:
+
+    ```bash
+    pnpm migrate:dev
+    ```
+
+    See [Database setup and migrations](/deployment/database) for the full migration workflow.
+  </Step>
+</Steps>
+
+
+
+## Stopping and cleaning up
+
+<CodeGroup>
+
+```bash Stop the container
+docker-compose down
+```
+
+```bash Stop and remove the volume
+docker-compose down -v
+```
+
+</CodeGroup>
+
+Use `docker-compose down` to stop and remove the container while keeping your data in the `postgres_data` volume. Add `-v` to also delete the volume and start fresh.
+
+<Warning>
+  Running `docker-compose down -v` permanently deletes all database data stored in the `postgres_data` volume.
+</Warning>

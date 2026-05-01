@@ -1,0 +1,105 @@
+---
+title: "Configure Movie Circle's required environment variables"
+description: "Reference for every environment variable Movie Circle needs: database URL, TMDB API keys, NextAuth secrets, and GitHub or Google OAuth credentials."
+---
+
+Movie Circle reads its configuration from environment variables at startup. Create a `.env` file in the project root before running `pnpm dev` or `docker-compose up`. The sections below describe every variable, whether it's required, and where to obtain it.
+
+## Sample `.env` file
+
+```bash .env
+# Database
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/movie_circle"
+
+# TMDB
+NEXT_PUBLIC_TMDB_API_KEY="your_tmdb_api_key"
+TMDB_API_KEY="your_tmdb_api_key"
+
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your_generated_secret"
+
+# GitHub OAuth (optional)
+GITHUB_ID="your_github_client_id"
+GITHUB_SECRET="your_github_client_secret"
+
+# Google OAuth (optional)
+GOOGLE_ID="your_google_client_id"
+GOOGLE_SECRET="your_google_client_secret"
+```
+
+<Note>
+  Never commit your `.env` file to version control. The repository's `.gitignore` excludes it by default.
+</Note>
+
+## Required variables
+
+These variables must be set for the app to start and function correctly.
+
+<ParamField path="DATABASE_URL" type="string" required>
+  PostgreSQL connection string used by Prisma to connect to the database. The format is `postgresql://USER:PASSWORD@HOST:PORT/DATABASE`.
+
+  If you're using the Docker Compose setup, use:
+  ```
+  postgresql://postgres:postgres@localhost:5432/movie_circle
+  ```
+</ParamField>
+
+<ParamField path="NEXT_PUBLIC_TMDB_API_KEY" type="string" required>
+  TMDB API key exposed to the browser for client-side requests such as image loading and search suggestions. Because this variable is prefixed with `NEXT_PUBLIC_`, it is bundled into the client-side JavaScript.
+
+  Get your key at [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api). Registration is free.
+</ParamField>
+
+<ParamField path="TMDB_API_KEY" type="string" required>
+  TMDB API key used in server-side requests (API routes and server components). This variable is not exposed to the browser.
+
+  Use the same API key value as `NEXT_PUBLIC_TMDB_API_KEY` unless you have a separate server-only key.
+</ParamField>
+
+<ParamField path="NEXTAUTH_URL" type="string" required>
+  The canonical base URL of the app, used by NextAuth to construct OAuth callback URLs. For local development, set this to `http://localhost:3000`.
+
+  In production, set it to your deployed domain, for example `https://moviecircle.example.com`.
+</ParamField>
+
+<ParamField path="NEXTAUTH_SECRET" type="string" required>
+  Secret key used to sign and encrypt NextAuth session tokens (JWTs). Must be a long, random string.
+
+  Generate one with:
+  ```bash
+  openssl rand -base64 32
+  ```
+
+  <Warning>
+    Keep this value secret. Rotating it will invalidate all existing sessions.
+  </Warning>
+</ParamField>
+
+## Optional OAuth provider variables
+
+Movie Circle supports GitHub and Google sign-in via OAuth. Both providers are optional — if you omit their credentials, only email/password sign-in will be available.
+
+### GitHub
+
+<ParamField path="GITHUB_ID" type="string">
+  Client ID from a GitHub OAuth App. Create one at **GitHub → Settings → Developer settings → OAuth Apps → New OAuth App**.
+
+  Set the **Authorization callback URL** to `http://localhost:3000/api/auth/callback/github` for local development.
+</ParamField>
+
+<ParamField path="GITHUB_SECRET" type="string">
+  Client secret generated alongside your GitHub OAuth App. Copy it immediately after creation — GitHub won't show it again.
+</ParamField>
+
+### Google
+
+<ParamField path="GOOGLE_ID" type="string">
+  Client ID from a Google OAuth 2.0 credential. Create one in the [Google Cloud Console](https://console.cloud.google.com/) under **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
+
+  Set the **Authorized redirect URI** to `http://localhost:3000/api/auth/callback/google` for local development.
+</ParamField>
+
+<ParamField path="GOOGLE_SECRET" type="string">
+  Client secret generated alongside your Google OAuth credential.
+</ParamField>

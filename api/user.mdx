@@ -1,0 +1,153 @@
+---
+title: "User profile API endpoints"
+description: "Retrieve and update the authenticated user's profile information. Change passwords for credential-based accounts; OAuth accounts are read-only."
+---
+
+The User API exposes two resources: the current user's profile and a password-change action. All endpoints require a valid NextAuth session cookie. Users who signed up via an OAuth provider (Google, GitHub, etc.) have a `null` password in the database and face additional restrictions documented below.
+
+---
+
+## Get current user profile
+
+Returns the profile for the authenticated user.
+
+```
+GET /api/user/profile
+```
+
+### Example
+
+```bash
+curl https://<your-domain>/api/user/profile \
+  -H "Cookie: next-auth.session-token=<token>"
+```
+
+### Response `200`
+
+<ResponseField name="id" type="string" required>
+  Unique CUID for the user.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Display name. `null` if not set.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  Email address. `null` if not yet verified.
+</ResponseField>
+
+<ResponseField name="image" type="string">
+  Avatar URL. `null` if not set (OAuth providers typically populate this).
+</ResponseField>
+
+<ResponseField name="emailVerified" type="string">
+  ISO 8601 timestamp of email verification. `null` for unverified accounts.
+</ResponseField>
+
+<ResponseField name="hasPassword" type="boolean" required>
+  `true` if the account was created with credentials (not OAuth). Useful for conditionally showing the change-password UI.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string" required>
+  ISO 8601 account creation timestamp.
+</ResponseField>
+
+<Note>
+  The raw `password` hash is never returned. `hasPassword` is a derived boolean computed server-side.
+</Note>
+
+---
+
+## Update current user profile
+
+Updates the display name and, for credential-based accounts only, the email address.
+
+```
+PUT /api/user/profile
+```
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  New display name. Whitespace is trimmed automatically.
+</ParamField>
+
+<ParamField body="email" type="string" required>
+  New email address. Must be a non-empty string. For OAuth users, this field must match their current email — the server will reject any change with `403`.
+</ParamField>
+
+### Example
+
+```bash
+curl -X PUT https://<your-domain>/api/user/profile \
+  -H "Cookie: next-auth.session-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Jane Doe", "email": "jane@example.com"}'
+```
+
+### Response `200`
+
+Returns the updated profile object with the same fields as [Get current user profile](#get-current-user-profile).
+
+### Error responses
+
+| Status | Body | Reason |
+| --- | --- | --- |
+| `400` | `{ "error": "Invalid input" }` | `name` or `email` was not a string. |
+| `403` | `{ "error": "OAuth users cannot change their email..." }` | OAuth user attempted to change their email address. |
+| `409` | `{ "error": "Email already in use" }` | A different account already uses the requested email. |
+
+<Warning>
+  OAuth-authenticated users cannot change their email through this endpoint. Their email is managed by the OAuth provider. They may update their display name freely.
+</Warning>
+
+---
+
+## Change password
+
+Updates the hashed password for a credential-based account after verifying the current password.
+
+```
+POST /api/user/change-password
+```
+
+<Note>
+  This endpoint is only meaningful for accounts created with the credentials provider (`hasPassword: true`). OAuth accounts will receive a `400` response explaining that their password is managed by their provider.
+</Note>
+
+### Request body
+
+<ParamField body="currentPassword" type="string" required>
+  The user's existing plain-text password. This is verified against the stored bcrypt hash before any change is applied.
+</ParamField>
+
+<ParamField body="newPassword" type="string" required>
+  The replacement plain-text password. It is hashed with bcrypt (10 salt rounds) before storage.
+</ParamField>
+
+### Example
+
+```bash
+curl -X POST https://<your-domain>/api/user/change-password \
+  -H "Cookie: next-auth.session-token=<token>" \
+  -H "Content-Type: application/json" \
+  -d '{"currentPassword": "oldpassword", "newPassword": "newpassword"}'
+```
+
+### Response `200`
+
+<ResponseField name="message" type="string" required>
+  Confirmation string. Value is `"Password changed successfully"` on success.
+</ResponseField>
+
+```json
+{ "message": "Password changed successfully" }
+```
+
+### Error responses
+
+| Status | Body | Reason |
+| --- | --- | --- |
+| `400` | `{ "error": "Missing required fields" }` | `currentPassword` or `newPassword` was absent. |
+| `400` | `{ "message": "Your account uses OAuth authentication..." }` | The user has no stored password (OAuth account). |
+| `401` | `{ "error": "Current password is incorrect" }` | The supplied `currentPassword` did not match the stored hash. |

@@ -1,0 +1,118 @@
+---
+title: "Deploy Movie Circle to production"
+description: "Set environment variables, run the production build, and start Movie Circle on any Node.js host or deploy to Vercel with analytics built in."
+---
+
+Deploying Movie Circle to production involves setting environment variables, running the build command (which generates the Prisma client, applies migrations, and compiles Next.js), and starting the server. The steps below apply to any Node.js-compatible host. Vercel-specific notes are included where relevant.
+
+## Required environment variables
+
+Set all of the following before building or starting the app. Missing variables will cause runtime errors or broken authentication.
+
+| Variable                    | Description                                                                 |
+| --------------------------- | --------------------------------------------------------------------------- |
+| `DATABASE_URL`              | PostgreSQL connection string for your production database                   |
+| `NEXTAUTH_URL`              | Full public URL of your app, e.g. `https://moviecircle.example.com`         |
+| `NEXTAUTH_SECRET`           | Random secret used to sign sessions; generate with `openssl rand -base64 32` |
+| `NEXT_PUBLIC_TMDB_API_KEY`  | TMDB API key for client-side requests (search, discover pages)              |
+| `TMDB_API_KEY`              | TMDB API key for server-side requests                                        |
+
+For OAuth sign-in you also need provider credentials. Add these if you are enabling GitHub or Google login:
+
+| Variable                  | Description                        |
+| ------------------------- | ---------------------------------- |
+| `GITHUB_ID`               | GitHub OAuth app client ID         |
+| `GITHUB_SECRET`           | GitHub OAuth app client secret     |
+| `GOOGLE_ID`               | Google OAuth client ID             |
+| `GOOGLE_SECRET`           | Google OAuth client secret         |
+
+<Warning>
+  `NEXTAUTH_URL` must be set to your exact production URL including the protocol (`https://`). An incorrect value breaks OAuth callbacks and session handling.
+</Warning>
+
+## Build and start
+
+<Steps>
+  <Step title="Install dependencies">
+    Install production dependencies with your package manager:
+
+    ```bash
+    pnpm install --frozen-lockfile
+    ```
+  </Step>
+  <Step title="Run the build command">
+    The `build` script generates the Prisma client, applies pending migrations, then compiles Next.js:
+
+    ```bash
+    pnpm build
+    ```
+
+    This runs the following under the hood:
+
+    ```bash
+    prisma generate && prisma migrate deploy && next build
+    ```
+
+    `prisma migrate deploy` applies all pending migrations from `prisma/migrations/` without prompting. If all migrations are already applied, it exits cleanly.
+  </Step>
+  <Step title="Start the production server">
+    After a successful build, start the Next.js production server:
+
+    ```bash
+    pnpm start
+    ```
+
+    This runs `next start`, which serves the compiled output from `.next/`. The server listens on port `3000` by default.
+  </Step>
+</Steps>
+
+<Note>
+  The build step runs `prisma migrate deploy` automatically, so you do not need to run migrations separately before starting the server.
+</Note>
+
+## Vercel deployment
+
+Movie Circle includes `@vercel/analytics` for automatic page-view and performance tracking. No extra configuration is needed — the analytics script is injected at build time when deployed to Vercel.
+
+To deploy to Vercel:
+
+<Steps>
+  <Step title="Connect your repository">
+    Import the repository in the [Vercel dashboard](https://vercel.com/new). Vercel detects Next.js automatically.
+  </Step>
+  <Step title="Set environment variables">
+    Add all variables from the table above in **Settings → Environment Variables**. Set `NEXTAUTH_URL` to the Vercel-assigned domain or your custom domain.
+  </Step>
+  <Step title="Deploy">
+    Vercel runs `pnpm build` on every push to your production branch. Migrations are applied as part of the build step.
+  </Step>
+</Steps>
+
+<Tip>
+  Vercel automatically provides a deployment URL (e.g. `https://movie-circle.vercel.app`). Update `NEXTAUTH_URL` to match whenever your domain changes.
+</Tip>
+
+## Image domains
+
+The `next.config.ts` allows remote images from two external hostnames. If you load images from other sources, add them to `remotePatterns` in `next.config.ts`:
+
+```typescript next.config.ts
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "image.tmdb.org" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+    ],
+  },
+};
+```
+
+## Generating NEXTAUTH_SECRET
+
+If you do not have a secret yet, generate one with:
+
+```bash
+openssl rand -base64 32
+```
+
+Copy the output and set it as `NEXTAUTH_SECRET`. Never reuse a development secret in production.

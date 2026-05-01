@@ -1,0 +1,59 @@
+---
+title: "Movie Circle REST API overview"
+description: "All Movie Circle API endpoints are relative paths under the Next.js app. Every request requires a valid NextAuth session cookie and returns JSON."
+---
+
+The Movie Circle API is a set of JSON REST endpoints built into the Next.js application. All paths are relative to the app's origin — there is no separate subdomain. Authentication is handled exclusively through the NextAuth session cookie established at sign-in; there are no API keys or bearer tokens. Unauthenticated requests receive a `401 Unauthorized` response regardless of the endpoint.
+
+## Base URL
+
+All endpoints are mounted under `/api` relative to the app origin:
+
+```
+https://<your-domain>/api/<resource>
+```
+
+No versioning prefix is used. If you are running locally the base is `http://localhost:3000/api`.
+
+## Authentication
+
+Every endpoint (except `GET /api/groups/:id/public` and `GET /api/media-entries/:id/public`) reads the NextAuth session from the incoming request cookie. Sign in through the app's auth flow first; all subsequent requests from that browser session are automatically authenticated.
+
+<Note>
+  There is no token-based authentication. cURL examples below include a `Cookie` header — copy the `next-auth.session-token` value from your browser's DevTools after signing in.
+</Note>
+
+## Request and response format
+
+- All request bodies must be JSON (`Content-Type: application/json`).
+- All successful responses return JSON.
+- Dates are ISO 8601 strings (e.g. `"2024-11-01T12:00:00.000Z"`).
+- IDs are CUID strings (e.g. `"clx4m2r0k0000abc123xyz"`).
+
+## Common error responses
+
+| Status | Body                            | When it occurs                                       |
+| ------ | ------------------------------- | ---------------------------------------------------- |
+| `400`  | `{ "error": "..." }`            | Missing or invalid request fields.                   |
+| `401`  | `{ "error": "Unauthorized" }`   | No session or invalid session cookie.                |
+| `403`  | `{ "error": "..." }`            | Action not allowed for this account type (e.g. OAuth users changing email). |
+| `404`  | `{ "error": "Not found" }`      | Resource does not exist or belongs to another user.  |
+| `409`  | `{ "error": "..." }`            | Conflict, e.g. email already in use.                 |
+| `500`  | `{ "error": "Internal server error" }` | Unexpected server-side failure.               |
+
+## Endpoint groups
+
+<CardGroup cols={2}>
+  <Card title="Collections" icon="folder" href="/api/collections">
+    Create and manage collections (groups) of movies and TV shows. List, create, update, delete, and fetch public collections.
+  </Card>
+  <Card title="Media entries" icon="film" href="/api/media-entries">
+    Add movies and series to collections with watch status, ratings, and comments. Supports upsert, search by TMDB ID, and per-entry sharing.
+  </Card>
+  <Card title="Sharing" icon="share" href="/api/sharing">
+    Verify share passwords for password-protected collections and media entries. Access public collections and entries without authentication.
+  </Card>
+  <Card title="User" icon="user" href="/api/user">
+    Retrieve and update the current user's profile. Change passwords for credential-based accounts.
+  </Card>
+</CardGroup>

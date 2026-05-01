@@ -1,0 +1,97 @@
+---
+title: "Adding and managing movies and TV as media entries"
+description: "Add movies and TV shows to your collections, set a watch status, rate titles on a 0–10 scale, and write personal notes to keep track of what you think."
+---
+
+A media entry is your personal record of a movie or TV show. It stores the TMDB identifier for the title along with anything you want to add: a watch status, a numeric rating, and free-form notes. One entry can live in multiple collections at the same time — for example, a film you rate 9/10 might sit in both your "Favorites" collection and your default "Watched" list. You manage your entries from inside each collection, or from the media detail pages you reach through Discover.
+
+## Adding a title to a collection
+
+<Steps>
+  <Step title="Find the title">
+    Browse to a movie at `/movie/[id]` or a TV show at `/tv/[id]`, or open a collection and click **Add Item**.
+  </Step>
+  <Step title="Open the add dialog">
+    On the media detail page, click the **Add to Collection** button in the header actions area. Alternatively, open the target collection at `/collections/[id]` and click **Add Item** to search from there.
+  </Step>
+  <Step title="Select or search">
+    If you opened the dialog from a collection, type in the search box to find the title by name. Results appear as you type.
+  </Step>
+  <Step title="Confirm">
+    Click the result you want and confirm. The title is added to the collection and appears immediately in the entries list.
+  </Step>
+</Steps>
+
+<Note>
+If the title is already in your account (in any collection), Movie Circle reuses the existing entry and adds it to the new collection rather than creating a duplicate.
+</Note>
+
+## Watch status
+
+Every media entry can be assigned one of three watch statuses. Changing the status automatically moves the entry to the matching default collection:
+
+| Status | Default collection |
+|---|---|
+| **To Watch** | To Watch |
+| **Watching** | Watching |
+| **Watched** | Watched |
+
+To change the status of an entry inside a collection, hover over the entry card and use the status dropdown menu. The change is reflected across all collections the entry belongs to.
+
+## Rating and notes
+
+Each entry supports a personal rating and a free-text comment. These are entirely private and are only visible to you (or to anyone you share the entry or collection with).
+
+<CardGroup cols={2}>
+  <Card title="Rating" icon="star">
+    A numeric value from **0 to 10** (decimal values are supported). If you leave the rating blank, no score is stored.
+  </Card>
+  <Card title="Notes" icon="pencil">
+    A free-text field for anything you want to remember — your reaction, context, or a recommendation for someone else.
+  </Card>
+</CardGroup>
+
+You can set or update the rating and notes when you first add a title, or at any time afterward by editing the entry.
+
+## Adding the same title to multiple collections
+
+A single media entry can belong to any number of custom collections and default status lists at the same time. To add an existing entry to another collection:
+
+<Steps>
+  <Step title="Open the target collection">
+    Go to `/collections/[id]` for the collection you want to add the title to.
+  </Step>
+  <Step title="Click Add Item">
+    Press **Add Item** in the collection header.
+  </Step>
+  <Step title="Search for the title">
+    Type the movie or show name. If it already exists in your account, it appears in the results.
+  </Step>
+  <Step title="Add it">
+    Select the title. Movie Circle adds the existing entry to this collection without creating a new one. Your existing rating and notes are preserved.
+  </Step>
+</Steps>
+
+## Editing an entry
+
+Inside any collection, hover over an entry card to reveal the action buttons. Click the **Edit** icon to open the edit dialog, where you can update the rating and notes for that entry. Changes apply everywhere the entry appears — across all collections.
+
+## Removing an entry from a collection
+
+Hover over an entry card and click the **Delete** (trash) icon. A confirmation toast appears, and the entry is removed from that collection. The underlying entry and its data remain in any other collections it belongs to.
+
+<Warning>
+Removing an entry from its last collection does not delete the entry from your account entirely. If you want to fully remove a title, you must remove it from every collection it belongs to.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="Can I set a rating when I first add a title?">
+    Yes. The add dialog accepts a rating and notes at the time of creation, so you can record your thoughts immediately without a second edit step.
+  </Accordion>
+  <Accordion title="What happens to my rating if I move a title between status collections?">
+    Changing the watch status only affects which default collection (To Watch, Watching, Watched) the entry belongs to. Your rating and notes are stored on the entry itself and are not affected.
+  </Accordion>
+  <Accordion title="Is there a limit to how many collections one entry can belong to?">
+    No hard limit is enforced. You can add the same title to as many collections as you like.
+  </Accordion>
+</AccordionGroup>

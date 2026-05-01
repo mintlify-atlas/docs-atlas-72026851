@@ -1,0 +1,139 @@
+---
+title: "Database setup and migrations"
+description: "Configure PostgreSQL, run Prisma migrations, seed demo data, and manage your Movie Circle schema through the full development and production lifecycle."
+---
+
+Movie Circle uses PostgreSQL as its database, managed through Prisma ORM. The schema lives in `prisma/schema.prisma` and migrations are tracked in `prisma/migrations/`. This page covers the data models, how to run migrations in development and production, and the npm scripts available for day-to-day database management.
+
+## Setting DATABASE_URL
+
+All Prisma commands read the connection string from the `DATABASE_URL` environment variable. Set it in your `.env` file before running any migration or seed commands.
+
+```bash .env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/movie_circle"
+```
+
+If you are using the Docker Compose setup, this exact string connects to the `movie-circle-db` container. See [Run Movie Circle with Docker Compose](/deployment/docker) for how to start it.
+
+## Data models
+
+The schema defines six models:
+
+| Model              | Purpose                                                                  |
+| ------------------ | ------------------------------------------------------------------------ |
+| `User`             | Registered user with optional password for credentials sign-in           |
+| `Group`            | A named collection owned by a user; supports public sharing and password protection |
+| `MediaEntry`       | A movie or TV series linked to a TMDB ID, with rating, comment, and share settings |
+| `MediaEntryGroup`  | Join table connecting `MediaEntry` to one or more `Group` records        |
+| `Account`          | OAuth account linked to a `User` (NextAuth adapter model)                |
+| `Session`          | Active session record (NextAuth adapter model)                           |
+
+The core relationship is: a `User` owns many `Group` collections and many `MediaEntry` records. A `MediaEntry` belongs to one or more `Group` records through the `MediaEntryGroup` join table.
+
+```prisma prisma/schema.prisma
+model User {
+  id       String       @id @default(cuid())
+  groups   Group[]
+  entries  MediaEntry[]
+  // ...
+}
+
+model Group {
+  id           String            @id @default(cuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaEntries MediaEntryGroup[]
+  // ...
+}
+
+model MediaEntry {
+  id     String            @id @default(cuid())
+  tmdbId Int
+  type   MediaType         // movie | series
+  userId String
+  user   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groups MediaEntryGroup[]
+  // ...
+}
+```
+
+## Running migrations
+
+### Development
+
+Use `migrate dev` during local development. It applies pending migrations, generates the Prisma client, and prompts you to name new migrations when you change the schema.
+
+```bash
+pnpm migrate:dev
+```
+
+### Production
+
+Use `migrate deploy` in production and CI pipelines. It applies pending migrations without prompting and never creates new migration files.
+
+```bash
+pnpm migrate:deploy
+```
+
+<Warning>
+  Never run `migrate dev` in production. It can reset your database interactively and is not designed for automated environments.
+</Warning>
+
+### Migration history
+
+The `prisma/migrations/` directory contains four migrations committed to the repository:
+
+| Migration                                      | Description                              |
+| ---------------------------------------------- | ---------------------------------------- |
+| `20260311115027_init`                          | Initial schema — users, accounts, sessions |
+| `20260312113401_add_collections_and_media_entries` | Collections and media entry models       |
+| `20260312120000_add_multiple_collections`      | Support for multiple collections per user |
+| `20260312141305_add_share_access_control`      | Share password and invited email fields  |
+
+## Available database scripts
+
+The `package.json` exposes these scripts for database management:
+
+| Script               | Command                    | When to use                                              |
+| -------------------- | -------------------------- | -------------------------------------------------------- |
+| `migrate:dev`        | `prisma migrate dev`       | Apply and create migrations in development               |
+| `migrate:deploy`     | `prisma migrate deploy`    | Apply migrations in production or CI                     |
+| `migrate:reset`      | `prisma migrate reset`     | Drop and re-create the database (development only)       |
+| `migrate:status`     | `prisma migrate status`    | Check which migrations are applied                       |
+| `db:push`            | `prisma db push`           | Push schema changes without a migration file             |
+| `db:pull`            | `prisma db pull`           | Introspect an existing database to update the schema     |
+| `db:seed`            | `tsx prisma/seed.ts`       | Populate the database with demo data                     |
+| `studio`             | `prisma studio`            | Open the Prisma visual database editor                   |
+
+## Seeding demo data
+
+The seed script creates a demo user you can use to sign in immediately after setup:
+
+| Field    | Value              |
+| -------- | ------------------ |
+| Email    | `user@example.com` |
+| Password | `password123`      |
+
+Run the seed after your first migration:
+
+```bash
+pnpm db:seed
+```
+
+<Note>
+  The seed uses `upsert`, so running it multiple times is safe — it will not create duplicate users.
+</Note>
+
+## Opening Prisma Studio
+
+Prisma Studio is a visual browser-based editor for your database records. Start it with:
+
+```bash
+pnpm studio
+```
+
+It opens at `http://localhost:5555` and lets you browse, filter, and edit rows for any model in your schema.
+
+<Tip>
+  Use Prisma Studio to inspect seed data, verify migration results, or quickly test data changes during development.
+</Tip>
